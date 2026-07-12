@@ -48,35 +48,32 @@ pipeline {
                 """
             }
         }
-    }
 
-    stage('Deploy to App Server') {
-    steps {
-        sshagent(credentials: ['app-server-ssh']) {
-            sh """
-                ssh -o StrictHostKeyChecking=no ubuntu@172.31.6.112 '
-                    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 378131233092.dkr.ecr.us-east-1.amazonaws.com
+        stage('Deploy to App Server') {
+            steps {
+                sshagent(credentials: ['app-server-ssh']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@172.31.6.112 '
+                        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 378131233092.dkr.ecr.us-east-1.amazonaws.com
 
-                    docker pull 378131233092.dkr.ecr.us-east-1.amazonaws.com/contact-management-system:latest
+                        docker pull 378131233092.dkr.ecr.us-east-1.amazonaws.com/contact-management-system:latest
 
-                    docker stop contact-management-system || true
+                        docker stop contact-management-system || true
 
-                    docker rm contact-management-system || true
+                        docker rm contact-management-system || true
 
-                    docker run -d \
-                    --name contact-management-system \
-                    -p 80:80 \
-                    --restart unless-stopped \
-                    378131233092.dkr.ecr.us-east-1.amazonaws.com/contact-management-system:latest
-                '
-            """
+                        docker run -d --name contact-management-system -p 80:80 --restart unless-stopped 378131233092.dkr.ecr.us-east-1.amazonaws.com/contact-management-system:latest
+                        '
+                    """
+                }
+            }
         }
+
     }
-}
-    
+
     post {
         success {
-            echo 'Docker Image Successfully Pushed to AWS ECR'
+            echo 'Docker Image Successfully Built, Pushed and Deployed'
         }
 
         failure {
